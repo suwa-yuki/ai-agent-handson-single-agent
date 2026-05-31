@@ -138,7 +138,11 @@ Antigravity CLI requires permission to read, edit, and execute files here.
 今日の東京の天気は？
 ```
 
-Antigravity CLI を終了するには `Ctrl` + `D` を 2 回押します。
+Antigravity CLI を終了します。スラッシュコマンド `/exit` で終了できます。
+
+```
+/exit
+```
 
 ## Agents CLI のインストール
 
@@ -147,7 +151,7 @@ Agents CLI は Google Cloud 上で AI エージェントを構築、評価、デ
 以下のコマンドでインストールします。
 
 ```sh
-pip install google-agents-cli && agents-cli setup
+uvx google-agents-cli setup
 ```
 
 Antigravity CLI で Agents CLI のスキルが使えるようになっているか確認しましょう。
@@ -198,7 +202,7 @@ agy
 次のプロンプトで、シンプルエージェントの作成を開始します。
 
 ```
-agents-cli を使って、地域の天気を調べるエージェントを作成します。ADK のバージョンは 2.0 で作成します。天気の取得には weather.gov を使用します。
+agents-cli を使って、地域の天気を調べるエージェントを作成します。ADK のバージョンは 2.0 で作成します。天気の取得には Google Maps Platform の Weather API  を使用します。
 ```
 
 Antigravity CLI がエージェントの作成を進めます。下記のように各コマンドの実行許可が求められる場合があるので、問題がなければ `3` を選択します。
@@ -239,7 +243,13 @@ GOOGLE_CLOUD_LOCATION=global
 agents-cli playground
 ```
 
-数秒後、下記のような結果が表示されれば起動が完了しています。
+`agents-cli: command not found` と出てしまう場合は、Cloud Shell を再起動するか、次のコマンドを実行してください。
+
+```sh
+export PATH="/home/<Google アカウント名>/.local/bin:$PATH"
+```
+
+数秒後、下記のような結果が表示されていれば、起動できています。
 
 ```
 +-----------------------------------------------------------------------------+
@@ -252,9 +262,59 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
 ```
 
-`http://127.0.0.1:8080` で立ち上がります。Web プレビューボタン <walkthrough-web-preview-icon></walkthrough-web-preview-icon> をクリックし、メニューから「ポート 8080 でプレビュー」を選びます。
+`http://127.0.0.1:8080` で立ち上がります。Web プレビューボタン <walkthrough-web-preview-icon></walkthrough-web-preview-icon> のアイコンをクリックし、メニューから「ポート 8080 でプレビュー」を選びます。
 
-実際の地域を入力し、動作を検証してみましょう。weather.gov はアメリカのみ対応しているため「ニューヨークの天気は？」や「ラスベガスの天気は？」などと質問してみましょう。
+アプリケーションを検証するには `Select an App` から `app` を選択します。
+
+実際の地域を入力し、動作を検証してみましょう。Weather API は日本は未サポートのため「ニューヨークの天気は？」や「ラスベガスの天気は？」などと質問してみましょう。
+
+## エージェントのソースコードの確認
+
+作成したエージェントがどのような実装になっているか確認してみましょう。
+
+<walkthrough-cloud-shell-editor-icon></walkthrough-cloud-shell-editor-icon> のアイコンをクリックすると、Cloud Shell Editor (Code OSS ベースのエディタ) を開くことができます。
+
+`weather-agent` のファイル構成は次のようになっていると思います。
+
+```
+.
+├── app/
+│   ├── __init__.py
+│   ├── agent.py
+│   ├── agent_runtime_app.py
+│   └── app_utils/
+│     ├── telemetry.py
+│     └── typing.py
+├── tests/
+├── agents-cli-manifest.yaml
+├── GEMINI.md
+├── pyproject.toml
+├── README.md
+└── uv.lock
+```
+
+エージェントの振る舞いを左右する、最も重要なファイルは `agent.py` です。`agent.py` を開いてみましょう。
+
+`get_current_weather` や `get_daily_forecast`、`get_hourly_forecast` などのような関数が定義されており、最後に次のようなコードが記述されているはずです。
+
+```python
+root_agent = Agent(
+    name="root_agent",
+    model=Gemini(
+        model="gemini-flash-latest",
+        retry_options=types.HttpRetryOptions(attempts=3),
+    ),
+    instruction="You are a helpful AI assistant designed to provide accurate and useful weather information.",
+    tools=[get_current_weather, get_daily_forecast, get_hourly_forecast],
+)
+
+app = App(
+    root_agent=root_agent,
+    name="app",
+)
+```
+
+`Agent` でルートエージェントを定義しています。設定としては `instruction` にどのような役割を持つのかプロンプトを設定し、`tools` には事前に定義してある関数をツールとして指定しています。
 
 ## エージェントのデプロイ
 
@@ -282,6 +342,96 @@ agents-cli を使って Agent Runtime にデプロイしてください。
 https://console.cloud.google.com/agent-platform/runtimes
 
 一覧から `weather-agent` をクリックし `プレイグラウンド` タブに切り替えます。ローカルで立ち上げたプレイグラウンド環境と同様に、エージェントの動作の検証が行えます。
+
+## おまけ : Managed Agents API でシングルエージェントを実行する
+
+Managed Agents は API の呼び出しだけでフルマネージド環境でエージェントを起動・実行できるサービスです。シンプルなエージェントであれば、Managed Agents API を呼び出すだけでエージェントが実行できます。
+
+### Antigravity エージェントの呼び出し
+
+Antigravity エージェントは、デフォルトで用意されている Google ファーストパーティ エージェントです。カスタム エージェント リソースを作成する必要なく、1 回の API 呼び出しのみで実行できます。
+
+次のコマンドを実行してみましょう。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
+
+```sh
+curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/interactions" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Api-Revision: 2026-05-20" \
+  -d '{
+      "stream": true,
+      "background": true,
+      "store": true,
+      "agent": "antigravity-preview-05-2026",
+      "environment": {"type": "remote"},
+      "tools": [
+        {"type": "google_search"}
+      ],
+      "input": [
+          {
+              "type": "user_input",
+              "content": [
+                  {
+                      "type": "text",
+                      "text": "今日のニュースを教えて"
+                  }
+              ]
+          }
+      ]
+  }'
+```
+
+Google 検索で見つかるような、最新のニュースが取得できるはずです。
+
+### カスタムエージェントの作成と呼び出し
+
+次に、カスタムエージェントを作成し、呼び出してみましょう。
+
+まずは次のコマンドでカスタムエージェントを作成します。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
+
+```sh
+curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/agents" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -d '{
+      "id": "news-agent",
+      "base_agent": "antigravity-preview-05-2026",
+      "description": "最新のニュースを分かりやすくサマリーするエージェントです。",
+      "system_instruction": "google_search　を使って最新のニュースを調べ、わかりやすくサマリーします。",
+      "tools": [
+          {"type": "google_search"}
+      ]
+  }'
+```
+
+作成後は、指定した `id` で呼び出すことができます。次のコマンドを実行します。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
+
+```sh
+curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/interactions" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Api-Revision: 2026-05-20" \
+  -d '{
+      "stream": true,
+      "background": true,
+      "store": true,
+      "agent": "news-agent",
+      "input": [
+          {
+              "type": "user_input",
+              "content": [
+                  {
+                      "type": "text",
+                      "text": "今日のニュースを教えて"
+                  }
+              ]
+          }
+      ],
+      "environment": {"type": "remote"}
+  }'
+```
+
+Antigravity エージェントと同様、最新のニュースが取得できるはずです。
 
 ## お疲れ様でした！
 
