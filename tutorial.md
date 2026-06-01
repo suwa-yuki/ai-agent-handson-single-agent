@@ -132,6 +132,23 @@ Antigravity CLI requires permission to read, edit, and execute files here.
   No, exit
 ```
 
+ハンズオンではスムーズに実装を進めるため、パーミッション設定をデフォルトの「レビューが必要な設定」から「自動許可の設定」に変更します。パーミッション設定は `/permission` スラッシュコマンドを実行します。
+
+```
+/permission
+```
+
+設定を `always-proceed` に変更します。
+
+```
+Active Permissions
+
+  request-review Prompt for write, bash, and web tools
+  proceed-in-sandbox  Auto-approve terminal commands in sandbox
+> always-proceed (current)  Auto-approve all tools
+  strict              Prompt for all non-read tools
+```
+
 以上で Antigravity CLI の初期設定は終了です。簡単なプロンプトを入力し、返答が返ってくることを確認しましょう。
 
 ```
