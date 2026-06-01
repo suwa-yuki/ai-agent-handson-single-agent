@@ -376,32 +376,12 @@ Antigravity エージェントは、デフォルトで用意されている Goog
 
 次のコマンドを実行してみましょう。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
 
-```sh
+```
 curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/interactions" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Api-Revision: 2026-05-20" \
-  -d '{
-      "stream": true,
-      "background": true,
-      "store": true,
-      "agent": "antigravity-preview-05-2026",
-      "environment": {"type": "remote"},
-      "tools": [
-        {"type": "google_search"}
-      ],
-      "input": [
-          {
-              "type": "user_input",
-              "content": [
-                  {
-                      "type": "text",
-                      "text": "今日のニュースを教えて"
-                  }
-              ]
-          }
-      ]
-  }'
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $(gcloud auth print-access-token)" \
+-H "Api-Revision: 2026-05-20" \
+-d '{"stream": true, "background": true, "store": true, "agent": "antigravity-preview-05-2026", "environment": {"type": "remote"}, "tools": [{"type": "google_search"}], "input": [{"type": "user_input", "content": [{"type": "text", "text": "今日のニュースを教えて"}]}]}'
 ```
 
 Google 検索で見つかるような、最新のニュースが取得できるはずです。
@@ -412,46 +392,21 @@ Google 検索で見つかるような、最新のニュースが取得できる�
 
 まずは次のコマンドでカスタムエージェントを作成します。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
 
-```sh
+```
 curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/agents" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -d '{
-      "id": "news-agent",
-      "base_agent": "antigravity-preview-05-2026",
-      "description": "最新のニュースを分かりやすくサマリーするエージェントです。",
-      "system_instruction": "google_search　を使って最新のニュースを調べ、わかりやすくサマリーします。",
-      "tools": [
-          {"type": "google_search"}
-      ]
-  }'
+  -d '{"id": "news-agent", "base_agent": "antigravity-preview-05-2026", "description": "最新のニュースを分かりやすくサマリーするエージェントです。", "system_instruction": "google_search　を使って最新のニュースを調べ、わかりやすくサマリーします。", "tools": [{"type": "google_search"}]}'
 ```
 
 作成後は、指定した `id` で呼び出すことができます。次のコマンドを実行します。`<YOUR_PROJECT_ID>` は <walkthrough-project-id/> に置き換えます。
 
-```sh
+```
 curl -X POST "https://aiplatform.googleapis.com/v1beta1/projects/<YOUR_PROJECT_ID>/locations/global/interactions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Api-Revision: 2026-05-20" \
-  -d '{
-      "stream": true,
-      "background": true,
-      "store": true,
-      "agent": "news-agent",
-      "input": [
-          {
-              "type": "user_input",
-              "content": [
-                  {
-                      "type": "text",
-                      "text": "今日のニュースを教えて"
-                  }
-              ]
-          }
-      ],
-      "environment": {"type": "remote"}
-  }'
+  -d '{"stream": true, "background": true, "store": true, "agent": "news-agent", "input": [{"type": "user_input", "content": [{"type": "text", "text": "今日のニュースを教えて"}]}], "environment": {"type": "remote"}}'
 ```
 
 Antigravity エージェントと同様、最新のニュースが取得できるはずです。
