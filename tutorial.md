@@ -1,5 +1,9 @@
 # Agent Development Kit (ADK) と Gemini Enterprise Agent Runtime で作るシングルエージェント
 
+### 所要時間
+
+<walkthrough-tutorial-duration duration="90"></walkthrough-tutorial-duration>
+
 ## はじめに
 
 このハンズオンでは、Agents CLI と Antigravity CLI を使い、Agent Development Kit (ADK) 2.0 でシングルエージェントを開発する方法を学びます。また、Gemini Enterprise Agent Runtime へのデプロイも行います。
@@ -12,10 +16,6 @@
 - Gemini Enterprise Agent Runtime へのデプロイ方法
 - Agents CLI の使い方
 - Antigravity CLI の使い方
-
-### 所要時間
-
-<walkthrough-tutorial-duration duration="90"></walkthrough-tutorial-duration>
 
 ## Google Cloud Project のセットアップ
 
