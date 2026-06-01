@@ -198,6 +198,12 @@ Workspace skills · Workspace config
   google-agents-cli-workflow: This skill should be used when the user wants to "develop an agent", "build an agent using ADK", "run the agent locally", "debug agent code", ...
 ```
 
+Antigravity CLI を終了します。スラッシュコマンド `/exit` で終了できます。
+
+```
+/exit
+```
+
 ## はじめてのシンプルエージェントの作成
 
 ### シンプルエージェントの作成
@@ -312,7 +318,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
 
 エージェントの振る舞いを左右する、最も重要なファイルは `agent.py` です。`agent.py` を開いてみましょう。
 
-`get_current_weather` や `get_daily_forecast`、`get_hourly_forecast` などのような関数が定義されており、最後に次のようなコードが記述されているはずです。
+現在の天気はエージェント単体では取得できないため、ツールとして使うための関数が作成されます。本ハンズオンでは関数名などの指定をプロンプトで行なっていないため、Antigravity CLI が必要と思われる関数を判断し作成します。例えば `get_current_weather` や `get_daily_forecast`、`get_hourly_forecast` などのような関数が定義され、エージェントの定義では次のようにツールが指定されます(実際にどのようなコードが作成されるかは Antigravity CLI の実装次第となります)。
 
 ```python
 root_agent = Agent(
